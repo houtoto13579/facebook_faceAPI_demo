@@ -1,5 +1,20 @@
 import React, { Component } from 'react';
-class ArticleList extends Component {
+
+class ConditionalLink extends Component{
+  constructor(){
+    super();
+  }
+  render(){
+    let listArr = this.props.fake;
+    return(
+      <div>
+        
+      </div>
+    );
+  }
+}
+export default ConditionalLink;
+/*class ArticleList extends Component {
   constructor(){
     super();
     this.createList = this.createList.bind(this);
@@ -37,4 +52,4 @@ class ArticleList extends Component {
   }
 }
 
-export default ArticleList;
+export default ArticleList;*/

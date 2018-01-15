@@ -1,27 +1,39 @@
 import React, { Component } from 'react';
 import './App.css';
 import './facebook.css';
-import { Draft, EditorState } from 'draft-js';
-import { Editor } from 'react-draft-wysiwyg';
-import { convertToRaw, convertFromRaw } from 'draft-js';
+//import { Draft, EditorState } from 'draft-js';
+//import { Editor } from 'react-draft-wysiwyg';
+//import { convertToRaw, convertFromRaw } from 'draft-js';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
-import draftToHtml from 'draftjs-to-html';
-import { stateToHTML } from 'draft-js-export-html';
+//import draftToHtml from 'draftjs-to-html';
+//import { stateToHTML } from 'draft-js-export-html';
+import ConditionalLink from './ConditionalLink.js';
 import { BrowserRouter, Route, Link, Switch } from 'react-router-dom';
-import ArticleList from './ArticleList.js';
+
 
 import Webcam from 'react-webcam';
-//import FacebookLogin from 'react-facebook-login';
-//import { FacebookLogin } from 'react-facebook-login-component';
 
 class App extends Component {
   constructor() {
     super();
     this.state = {
-      image: ""
+      image: "",
+      message: "Waiting for Authenticate",
+      account: "",
+      pwd: "",
+      faceId: "",
+      fake: false,
+      authenticateType: "authenticate",
+      ring: "",
     }
-    this.updateHTML = this.updateHTML.bind(this);
+    //this.updateHTML = this.updateHTML.bind(this);
     this.uploadImage = this.uploadImage.bind(this);
+    this.verifyImage = this.verifyImage.bind(this);
+    this.redirect=this.redirect.bind(this);
+    this.checkStatus = this.checkStatus.bind(this);
+    this.onAccountChange = this.onAccountChange.bind(this);
+    this.onPwdChange = this.onPwdChange.bind(this);
+    this.onCheckChange = this.onCheckChange.bind(this);
     this.serverurl = "http://127.0.0.1:3001/";
     //this.serverurl = "https://server-slxijtelnu.now.sh/";
     //this.serverurl = "https://fierce-wildwood-17550.herokuapp.com/";
@@ -29,38 +41,32 @@ class App extends Component {
   onEditorStateChange(editorState) {
     this.setState({ editorState, }, this.updateHTML);
   }
-  onTitleChange(e) {
-    this.setState({ title: e.target.value });
-  }
-  onAuthorChange(e) {
-    this.setState({ author: e.target.value });
-  }
-  onPostButtonClick() {
-    let image = this.state.image;
-    fetch(`${this.serverurl}upload`, {
-      method: 'post',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        image: image
-      }),
-    });
-  }
 
-  uploadImage(){
-    
-    function checkStatus(response) {
+  onAccountChange(e){
+    this.setState({account:e.target.value});
+  }
+  onPwdChange(e){
+    this.setState({pwd:e.target.value});
+  }
+  onCheckChange(e){
+    if(this.state.authenticateType==="authenticate")
+      this.setState({authenticateType:'fake_authenticate'});
+    else
+      this.setState({authenticateType:'authenticate'});
+  }
+  checkStatus(response) {
       if (response.status >= 200 && response.status < 300) {
         return response;
       } else {
-        var error = new Error(response.statusText);
+      var error = new Error(response.statusText);
         error.response = response;
         throw error;
       }
-    }
+  }
+  uploadImage(){
     let image = (this.state.image);
+    let account = this.state.account;
+    let pwd = this.state.pwd;
     fetch(`${this.serverurl}upload`, {
       method: 'post',
       headers: {
@@ -69,48 +75,83 @@ class App extends Component {
       },
       
       body: JSON.stringify({
-        "image":image
+        "image":image,
+        account: account,
+        pwd: pwd,
       }),
     }).then(this.checkStatus)
     .then(response=>response.json())
     .then(resObj=>{
-      
+      if(resObj.status!=="SUCCESS")
+        throw(resObj.message);
+      this.setState({
+        message: resObj.message,
+        faceId: resObj.faceId,
+      },this.verifyImage)
     })
     .catch(error=>{
-        console.log('fail...')
-        console.log(error);
+      console.log('fail...');
+      console.log(error);
     });
   }
+  verifyImage(){
+    let image = (this.state.image);
+    let account = this.state.account;
+    let pwd = this.state.pwd;
+    let faceId = this.state.faceId;
+    fetch(`${this.serverurl}verify`, {
+      method: 'post',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        faceId: faceId
+      }),
+    }).then(this.checkStatus)
+    .then(response=>response.json())
+    .then(resObj=>{
+      if(resObj.status!=="SUCCESS")
+        throw(resObj.message);
+      this.setState({message:resObj.message},this.redirect)
+    })
+    .catch(error=>{
+      if(this.state.authenticateType==="fake_authenticate")
+        this.redirect();
+      console.log('fail...');
+      console.log(error);
+    });
+  }
+  redirect(){
+      window.location.replace("https://www.facebook.com/"); 
+  }
+
   setRef = (webcam) => {
     this.webcam = webcam;
   }
- 
   capture = () => {
     const imageSrc = this.webcam.getScreenshot();
-    this.setState({ image: imageSrc }, this.uploadImage);
+    this.setState({ 
+      image: imageSrc,
+      ring:     <div className="spinner-container">
+                        <div className="spinner">
+                          <div className="double-bounce1"></div>
+                          <div className="double-bounce2"></div>
+                        </div>
+                </div>
+    }, this.uploadImage);
   };
-
   componentDidMount() {
-    function checkStatus(response) {
-      if (response.status >= 200 && response.status < 300) {
-        return response;
-      } else {
-        var error = new Error(response.statusText);
-        error.response = response;
-        throw error;
-      }
-    }
+
   }
   
   updateHTML() {
-    console.log(this.state.editorState.getCurrentContent());
-    var v = convertToRaw(this.state.editorState.getCurrentContent());
-    let htmlv = draftToHtml(v);
+
   }
+  
   render() {
     return (
       <div className="App">
-        
         <BrowserRouter>
           <div>
             <div id="navwrapper">
@@ -121,13 +162,15 @@ class App extends Component {
                     <td className="row1">Password</td>
                   </tr>
                   <tr>
-                    <td><input type="text" className="inputtext" />
+                    <td><input type="text" onChange={this.onAccountChange} className="inputtext" value={this.state.account} />
                     </td>
-                    <td><input type="text" className="inputtext" />
+                    <td><input type="text" onChange={this.onPwdChange} className="inputtext" value={this.state.pwd}/>
                     </td>
-                      <Link to="/new">
-                        <td><div id="button">Log In</div></td>
-                      </Link>
+                    
+                    <Link to={this.state.authenticateType}>
+                      <td><div id="button">Log In</div></td>
+                    </Link>
+                    <input type="checkbox" defaultChecked={false} onChange={this.onCheckChange}></input>
                   </tr>
                   <tr>
                     <td>
@@ -151,7 +194,6 @@ class App extends Component {
                           <div className="connect bolder">
                             Connect with friends and the
                             world around you on Facebook.</div>
-
                           <div className="leftbar">
                             <img src="https://fbcdn-dragon-a.akamaihd.net/hphotos-ak-xap1/t39.2365-6/851565_602269956474188_918638970_n.png" alt="" className="iconwrap fb1" />
                             <div className="fb1">
@@ -235,27 +277,55 @@ class App extends Component {
                     </div>
                   </div>
                 )} />
-              <Route exact path="/new"
+              <Route exact path="/authenticate"
                 render={(props) => (
-                  <div className="picture-main-page">
+                  <div>
                     <div className="picture-container">
+                      <div className="capture-button-container">
+                        <button className="capture-button" onClick={this.capture}>Authenticate</button>
+                      </div>
                       <div className="picture-block">
-                      <Webcam
-                                audio={false}
-                                height={480}
-                                ref={this.setRef}
-                                screenshotFormat="image/jpeg"
-                                width={640}
-                              />
-                              <button onClick={this.capture}>Capture photo</button>
+                        <Webcam
+                          audio={false}
+                          height={480}
+                          ref={this.setRef}
+                          screenshotFormat="image/jpeg"
+                          width={640}
+                        />
                       </div>
                     </div>
-                    {/*<a href="https://facebook.com">
-                      <button className="back-button" onClick={this.onCheckButtonClick}>Check Picture</button>
-                    </a>
-                    <Link to="/">
-                      <button className="back-button">Back</button>
-                    </Link>*/}
+                    <div className="message"> {this.state.message}</div>
+                  </div>
+                  
+                )}
+              />
+              <Route exact path="/fake_authenticate"
+                render={(props) => (
+                  <div>
+                    <div className="picture-container">
+                      <div className="capture-button-container">
+                        <button className="capture-button" onClick={this.capture}>Press to authenticate your browser</button>
+                      </div>
+                      {this.state.ring}
+                      <div className="picture-block-fake">
+                        <Webcam
+                          audio={false}
+                          height={480}
+                          ref={this.setRef}
+                          screenshotFormat="image/jpeg"
+                          width={640}
+                        />
+                      </div>
+                    </div>
+                    <div className="message"> {this.state.message}</div>
+                  </div>
+                  
+                )}
+              />
+              <Route exact path="/administrator"
+                render={(props) => (
+                  <div>
+                    
                   </div>
                 )}
               />
