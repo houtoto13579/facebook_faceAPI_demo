@@ -69,6 +69,21 @@
       cursor: pointer;
       transition: all ease 0.3s;
     }
+    .delete-button{
+      /*position: absolute;
+      left: 50%;*/
+      display: inline-block;
+      margin: 2px auto;
+      font-family: tahoma,verdana,arial,sans-serif;
+      letter-spacing:0.05px;
+      font-size: 4vh;
+      background-color: #DB4D6D;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all ease 0.3s;
+    }
     .picture-block-fake{
       display: inline-block;
       width: 100%;
@@ -82,6 +97,13 @@
       text-align: center;
       margin: 5px;
     }
+    .message{
+      display: inline-block;
+      width: 100%;
+      font-size: 3vh;
+      text-align: center;
+      margin: 5px;
+    }
 .spinner-container{
   display: inline-block;
   margin: 2px auto;
@@ -90,10 +112,10 @@
 .spinner {
   width: 40px;
   height: 40px;
-
   position: relative;
-  margin: 100px auto;
+  margin: 10px auto;
 }
+
 
 .double-bounce1, .double-bounce2 {
   width: 100%;
@@ -109,6 +131,24 @@
   animation: sk-bounce 2.0s infinite ease-in-out;
 }
 
+.double-bounce1-red, .double-bounce2-red {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: red;
+  opacity: 0.6;
+  position: absolute;
+  top: 0;
+  left: 0;
+  
+  -webkit-animation: sk-bounce 5.0s infinite ease-in-out;
+  animation: sk-bounce 5.0s infinite ease-in-out;
+}
+
+.double-bounce2-red {
+  -webkit-animation-delay: -1.0s;
+  animation-delay: -1.0s;
+}
 .double-bounce2 {
   -webkit-animation-delay: -1.0s;
   animation-delay: -1.0s;

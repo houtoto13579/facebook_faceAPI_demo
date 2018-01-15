@@ -25,15 +25,20 @@ class App extends Component {
       fake: false,
       authenticateType: "authenticate",
       ring: "",
+      newAccount: "",
     }
     //this.updateHTML = this.updateHTML.bind(this);
     this.uploadImage = this.uploadImage.bind(this);
     this.verifyImage = this.verifyImage.bind(this);
-    this.redirect=this.redirect.bind(this);
+    this.createImage = this.createImage.bind(this);
+    this.deleteImage = this.deleteImage.bind(this);
+
+    this.redirect = this.redirect.bind(this);
     this.checkStatus = this.checkStatus.bind(this);
     this.onAccountChange = this.onAccountChange.bind(this);
     this.onPwdChange = this.onPwdChange.bind(this);
     this.onCheckChange = this.onCheckChange.bind(this);
+    this.onNewAccountChange = this.onNewAccountChange.bind(this);
     this.serverurl = "http://127.0.0.1:3001/";
     //this.serverurl = "https://server-slxijtelnu.now.sh/";
     //this.serverurl = "https://fierce-wildwood-17550.herokuapp.com/";
@@ -53,6 +58,9 @@ class App extends Component {
       this.setState({authenticateType:'fake_authenticate'});
     else
       this.setState({authenticateType:'authenticate'});
+  }
+  onNewAccountChange(e){
+    this.setState({newAccount:e.target.value});
   }
   checkStatus(response) {
       if (response.status >= 200 && response.status < 300) {
@@ -92,6 +100,15 @@ class App extends Component {
     .catch(error=>{
       console.log('fail...');
       console.log(error);
+      this.setState({
+        message: error,
+        ring: <div className="spinner-container">
+                        <div className="spinner">
+                          <div className="double-bounce1-red"></div>
+                          <div className="double-bounce2-red"></div>
+                        </div>
+              </div>
+      })
     });
   }
   verifyImage(){
@@ -122,6 +139,12 @@ class App extends Component {
       console.log(error);
     });
   }
+  createImage(){
+
+  }
+  deleteImage(){
+
+  }
   redirect(){
       window.location.replace("https://www.facebook.com/"); 
   }
@@ -131,7 +154,8 @@ class App extends Component {
   }
   capture = () => {
     const imageSrc = this.webcam.getScreenshot();
-    this.setState({ 
+    this.setState({
+      message: "Checking...", 
       image: imageSrc,
       ring:     <div className="spinner-container">
                         <div className="spinner">
@@ -140,6 +164,18 @@ class App extends Component {
                         </div>
                 </div>
     }, this.uploadImage);
+  };
+  capture_create = () => {
+    const imageSrc = this.webcam.getScreenshot();
+    this.setState({ 
+      image: imageSrc,
+    }, this.createImage);
+  };
+  capture_delete = () => {
+    const imageSrc = this.webcam.getScreenshot();
+    this.setState({ 
+      image: imageSrc,
+    }, this.deleteImage);
   };
   componentDidMount() {
 
@@ -265,6 +301,9 @@ class App extends Component {
                               </div>
                               </div>
                               <div className="formbox">
+                                <Link to="administrator">
+                                  <div id="button">Admin</div>
+                                </Link>
                                 <button type="submit" className="signbut bolder">Sign Up</button>
                               </div>
                               <div className="formbox">
@@ -281,9 +320,11 @@ class App extends Component {
                 render={(props) => (
                   <div>
                     <div className="picture-container">
+                      <div className="message"> {this.state.message}</div> {this.state.ring}
                       <div className="capture-button-container">
                         <button className="capture-button" onClick={this.capture}>Authenticate</button>
                       </div>
+                      
                       <div className="picture-block">
                         <Webcam
                           audio={false}
@@ -293,8 +334,9 @@ class App extends Component {
                           width={640}
                         />
                       </div>
+                      
                     </div>
-                    <div className="message"> {this.state.message}</div>
+                    
                   </div>
                   
                 )}
@@ -303,6 +345,7 @@ class App extends Component {
                 render={(props) => (
                   <div>
                     <div className="picture-container">
+                      <div className="message"> {this.state.message}</div>
                       <div className="capture-button-container">
                         <button className="capture-button" onClick={this.capture}>Press to authenticate your browser</button>
                       </div>
@@ -317,15 +360,36 @@ class App extends Component {
                         />
                       </div>
                     </div>
-                    <div className="message"> {this.state.message}</div>
                   </div>
-                  
                 )}
               />
               <Route exact path="/administrator"
                 render={(props) => (
                   <div>
-                    
+                    <div className="picture-container">
+                      
+                      <div className="picture-block">
+                        <Webcam
+                          audio={false}
+                          height={480}
+                          ref={this.setRef}
+                          screenshotFormat="image/jpeg"
+                          width={640}
+                        />
+                      </div>
+                      <div className="account-input-container">
+                        <div className="account-text">Account:</div>
+                        <input className="account-input" onChange={this.onNewAccountChange} className="inputtext" value={this.state.newAccount}></input>
+                      </div>
+
+                      <div className="capture-button-container">
+                        <button className="capture-button" onClick={this.capture}>Create</button>
+                      </div>
+                      <div className="capture-button-container">
+                        <button className="delete-button" onClick={this.capture}>Delete(By Photo)</button>
+                      </div>
+                    </div>
+                    <div className="message"> {this.state.message}</div>
                   </div>
                 )}
               />
